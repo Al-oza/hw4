@@ -6,16 +6,16 @@ from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 import pymysql
-#import secrets
-import os
+import secrets
+#import os
 
-dbuser = os.environ.get('DBUSER')
-dbpass = os.environ.get('DBPASS')
-dbhost = os.environ.get('DBHOST')
-dbname = os.environ.get('DBNAME')
+#dbuser = os.environ.get('DBUSER')
+#dbpass = os.environ.get('DBPASS')
+#dbhost = os.environ.get('DBHOST')
+#dbname = os.environ.get('DBNAME')
 
-#conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
-conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(dbuser, dbpass, dbhost, dbname)
+conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
+#conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(dbuser, dbpass, dbhost, dbname)
 
 app = Flask(__name__)
 app.config['SECRET_KEY']='SuperSecretKey'
@@ -28,11 +28,14 @@ class akozakowski_dogsapp(db.Model):
     dogID = db.Column(db.Integer, primary_key=True)
     dogName = db.Column(db.String(255))
     dogType = db.Column(db.String(255))
-    age= db.Column(db.Integer)
+    age = db.Column(db.Integer)
+
+    def __repr__(self):
+        return "id: {0} | name: {1} | breed: {2} | age: {3}".format(self.dogID, self.dogName, self.dogType, self.age)
 
 
 class dogsForm(FlaskForm):
-    dogID = IntegerField('dogID:', validators=[DataRequired()])
+    dogID = IntegerField('DogID:', validators=[DataRequired()])
     dogName = StringField('Dog Name:', validators=[DataRequired()])
     dogType = StringField('Dog Type:', validators=[DataRequired()])
     age = IntegerField('Dog Age:', validators=[DataRequired()])
@@ -93,14 +96,14 @@ def update_dog(dogID):
     if form.validate_on_submit():
         dog.dogName = form.dogName.data
         dog.dogType = form.dogType.data
-        dog.Age = form.Age.data
+        dog.age = form.age.data
         db.session.commit()
         return redirect(url_for('get_dog', dogID = dog.dogID))
 
     form.dogID.data = dog.dogID
     form.dogName.data = dog.dogName
     form.dogType.data = dog.dogType
-    form.Age.data = dog.Age
+    form.age.data = dog.age
     return render_template('update_dog.html', form=form, pageTitle='Update Dog', legend="Update A Dog")
 
 

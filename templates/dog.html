@@ -1,21 +1,23 @@
-{%extends 'base.html' %}
+{% extends 'base.html' %}
 {% block body %}
 <div>
   <p><a href="{{url_for('index')}}"> Home </a> </p>
   <h4>{{legend}}</h4>
 
-  <form method ="POST" action="">
+{% if form %}
+  <form method ="POST">
+    
 
   {{ form.csrf_token}}
-  {{form.dogID.label}} {{form.dogID(size=20)}}
-  {{form.dogName.label}} {{form.dogName(size=20)}}
-  {{ form.dogType.label}} {{form.dogType(size=20)}}
-  {{ form.age.label}} {{form.age(size=20)}}
+  {{ form.dogID.label}} {{form.dogID}}
+  {{ form.dogName.label}} {{form.dogName}}
+  {{ form.dogType.label}} {{form.dogType}}
+  {{ form.age.label}} {{form.age}}
 
-  <input type="submit" formaction="{{url_for('update_dog', dogID=form.dogID)}}" value="Update">
-  <input type="submit" formaction="{{url_for('delete_dog', dogID=form.dogID)}}" value="Delete">
+  <input type="submit" formaction="{{url_for('update_dog', dog_ID=form.dogID)}}" value="Update">
+  <input type="submit" formaction="{{url_for('delete_dog', dog_ID=form.dogID)}}" value="Delete">
 
   </form>
-
+{% endif %}
 </div>
 {% endblock %}

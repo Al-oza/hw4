@@ -6,16 +6,16 @@ from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 import pymysql
-#import secrets
-import os
+import secrets
+#import os
 
-dbuser = os.environ.get('DBUSER')
-dbpass = os.environ.get('DBPASS')
-dbhost = os.environ.get('DBHOST')
-dbname = os.environ.get('DBNAME')
+#dbuser = os.environ.get('DBUSER')
+#dbpass = os.environ.get('DBPASS')
+#dbhost = os.environ.get('DBHOST')
+#dbname = os.environ.get('DBNAME')
 
-#conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
-conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(dbuser, dbpass, dbhost, dbname)
+conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
+#conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(dbuser, dbpass, dbhost, dbname)
 
 app = Flask(__name__)
 app.config['SECRET_KEY']='SuperSecretKey'
@@ -35,7 +35,7 @@ class akozakowski_dogsapp(db.Model):
 
 
 class dogsForm(FlaskForm):
-    dogID = IntegerField('DogID:', validators=[DataRequired()])
+    dogID = IntegerField('DogID:')
     dogName = StringField('Dog Name:', validators=[DataRequired()])
     dogType = StringField('Dog Type:', validators=[DataRequired()])
     age = IntegerField('Dog Age:', validators=[DataRequired()])
@@ -49,12 +49,12 @@ def index():
 def add_dog():
     form = dogsForm()
     if form.validate_on_submit():
-        dog = akozakowski_dogsapp(dogName=form.dogName.data, dogType=form.dogType.data, age= form.age.data)
-        db.session.add(dog)
+        obj = akozakowski_dogsapp(dogName=form.dogName.data, dogType=form.dogType.data, age= form.age.data)
+        db.session.add(obj)
         db.session.commit()
         return redirect('/')
 
-    return render_template('add_dog.html', form=form, pageTitle='Add dog')
+    return render_template('add_dog.html', form=form, pageTitle='Add dog', legend="Add a New Dog")
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -71,10 +71,10 @@ def search():
     else:
         return redirect('/')
 
-@app.route('/delete_dog/<int:dogID>', methods=['GET','POST'])
-def delete_dog(dogID):
+@app.route('/delete_dog/<int:dog_ID>', methods=['GET','POST'])
+def delete_dog(dog_ID):
     if request.method == 'POST': #if it's a POST request, delete the friend from the database
-        obj = akozakowski_dogsapp.query.get_or_404(dogID)
+        obj = akozakowski_dogsapp.query.get_or_404(dog_ID)
         db.session.delete(obj)
         db.session.commit()
         return redirect("/")
@@ -82,15 +82,18 @@ def delete_dog(dogID):
     else:
         return redirect("/")
 
-@app.route('/get_dog/<int:dogID>', methods=['GET', 'POST'])
-def get_dog(dogID):
-    obj = akozakowski_dogsapp.query.get_or_404(dogID)
-    return render_template('dog.html', form=obj, pageTitle = 'Dog Details', legend="Dog Details")
+@app.route('/dog/<int:dog_ID>', methods=['GET', 'POST'])
+def get_dog(dog_ID):
+    print(dog_ID)
+    print("inside post")
+    obj = akozakowski_dogsapp.query.get_or_404(dog_ID)
+    print(obj)
+    return render_template('dog.html', form=obj, pageTitle='Dog Details', legend="Dog Details")
 
 
-@app.route('/dog/<int:dogID>/update', methods=['GET', 'POST'])
-def update_dog(dogID):
-    dog = akozakowski_dogsapp.query.get_or_404(dogID)
+@app.route('/dog/<int:dog_ID>/update', methods=['GET', 'POST'])
+def update_dog(dog_ID):
+    dog = akozakowski_dogsapp.query.get_or_404(dog_ID)
     form = dogsForm()
 
     if form.validate_on_submit():
@@ -98,7 +101,7 @@ def update_dog(dogID):
         dog.dogType = form.dogType.data
         dog.age = form.age.data
         db.session.commit()
-        return redirect(url_for('get_dog', dogID = dog.dogID))
+        return redirect(url_for('get_dog', dog_ID = dog_ID))
 
     form.dogID.data = dog.dogID
     form.dogName.data = dog.dogName
@@ -110,4 +113,4 @@ def update_dog(dogID):
 
 
 if __name__ == '__main__':
-    app.run(debug==True)
+    app.run(debug==False)

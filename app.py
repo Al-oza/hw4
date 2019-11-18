@@ -1,10 +1,10 @@
 from flask import Flask
-from flask import render_template, redirect, request, flash
+from flask import render_template, redirect, request, flash, url_for
 from flask_wtf import FlaskForm
-from wtforms import StringField
-from wtforms import IntegerField
+from wtforms import StringField, SubmitField, IntegerField
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 import pymysql
 #import secrets
 import os
@@ -14,6 +14,7 @@ dbpass = os.environ.get('DBPASS')
 dbhost = os.environ.get('DBHOST')
 dbname = os.environ.get('DBNAME')
 
+#conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
 conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(dbuser, dbpass, dbhost, dbname)
 
 app = Flask(__name__)
@@ -31,6 +32,7 @@ class akozakowski_dogsapp(db.Model):
 
 
 class dogsForm(FlaskForm):
+    dogID = IntegerField('dogID:', validators=[DataRequired()])
     dogName = StringField('Dog Name:', validators=[DataRequired()])
     dogType = StringField('Dog Type:', validators=[DataRequired()])
     age = IntegerField('Dog Age:', validators=[DataRequired()])
@@ -51,17 +53,57 @@ def add_dog():
 
     return render_template('add_dog.html', form=form, pageTitle='Add dog')
 
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if request.method == 'POST':
+        print('post method')
+        form = request.form
+        search_value = form['search_string']
+        print(search_value)
+        search = "%{0}%".format(search_value)
+        print(search)
+        results = akozakowski_dogsapp.query.filter(or_(akozakowski_dogsapp.dogName.like(search), akozakowski_dogsapp.dogType.like(search))).all()
+        print(results)
+        return render_template('index.html', dogs = results, pageTitle='Alec\'s Dogs', legend="Search Results")
+    else:
+        return redirect('/')
+
 @app.route('/delete_dog/<int:dogID>', methods=['GET','POST'])
 def delete_dog(dogID):
     if request.method == 'POST': #if it's a POST request, delete the friend from the database
-        obj = akozakowski_dogsapp.query.filter_by(dogID=dogID).first()
+        obj = akozakowski_dogsapp.query.get_or_404(dogID)
         db.session.delete(obj)
         db.session.commit()
+        return redirect("/")
         flash('dog was successfully deleted!')
+    else:
         return redirect("/")
 
-    else: #if it's a GET request, send them to the home page
-        return redirect("/")
+@app.route('/get_dog/<int:dogID>', methods=['GET', 'POST'])
+def get_dog(dogID):
+    obj = akozakowski_dogsapp.query.get_or_404(dogID)
+    return render_template('dog.html', form=obj, pageTitle = 'Dog Details', legend="Dog Details")
+
+
+@app.route('/dog/<int:dogID>/update', methods=['GET', 'POST'])
+def update_dog(dogID):
+    dog = akozakowski_dogsapp.query.get_or_404(dogID)
+    form = dogsForm()
+
+    if form.validate_on_submit():
+        dog.dogName = form.dogName.data
+        dog.dogType = form.dogType.data
+        dog.Age = form.Age.data
+        db.session.commit()
+        return redirect(url_for('get_dog', dogID = dog.dogID))
+
+    form.dogID.data = dog.dogID
+    form.dogName.data = dog.dogName
+    form.dogType.data = dog.dogType
+    form.Age.data = dog.Age
+    return render_template('update_dog.html', form=form, pageTitle='Update Dog', legend="Update A Dog")
+
+
 
 
 if __name__ == '__main__':

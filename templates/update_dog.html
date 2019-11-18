@@ -1,0 +1,21 @@
+{%extends 'base.html' %}
+
+{% block body %}
+<div>
+  <h3>{{ legend}}</h3>
+
+  <form method ="POST" action="">
+
+  {{ form.csrf_token}}
+  {{form.dogID.label}} {{form.dogID(size=5, readonly=true)}}
+  {{form.dogName.label}} {{form.dogName(size=20)}}
+  {{ form.dogType.label}} {{form.dogType(size=20)}}
+  {{ form.age.label}} {{form.age(size=20)}}
+
+  <input type="submit" value="Save">
+
+  </form>
+
+</div>
+
+{% endblock %}
